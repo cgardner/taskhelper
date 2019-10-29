@@ -4,10 +4,12 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"io"
 	"log"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 // AddAction Flag to determine whether the user is adding a task with this template
@@ -21,23 +23,50 @@ var rootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		var template string = args[0]
 
-		if AddAction {
-			add(template, shift(args))
+		if viper.IsSet(template) {
+			runTemplate(template, shift(args))
 			return
 		}
-		report(template)
+
+		proxy(template)
 	},
 }
 
+func runTemplate(template string, args []string) {
+	if len(args) == 0 {
+		report(template)
+	}
+	add(template, args)
+
+}
+
 func report(template string) {
-	var parameters = []string{"+" + template, ""}
-	err := execute("task", parameters)
-	fmt.Printf("Report task finished with :%v", err)
-	fmt.Println("Displaying " + template + " report")
+	var reportName = template
+	configName := template + ".report"
+	if viper.IsSet(configName) {
+		fmt.Println("Using the template as the report")
+		reportName = viper.GetString(configName)
+	}
+
+	parameters := []string{reportName}
+	execute("task", parameters)
+}
+
+func proxy(command string) {
+	execute("task", []string{command})
 }
 
 func add(template string, task []string) {
-	parameters := append([]string{"add", "+" + template}, task...)
+	configName := template + ".add"
+	if !viper.IsSet(configName) {
+		err := fmt.Errorf("A Template wasn't found for `" + template + "`")
+		fmt.Println(err.Error())
+		os.Exit(0)
+	}
+	fmt.Println("Using the template as the report")
+	var addTemplate = viper.GetString(configName)
+
+	parameters := append([]string{"add", addTemplate}, task...)
 
 	fmt.Println("Adding a task using \"" + template + "\"")
 	err := execute("task", parameters)
@@ -46,9 +75,13 @@ func add(template string, task []string) {
 }
 
 func execute(command string, parameters []string) error {
+	fmt.Println("Running `" + command + "` with \"" + strings.Join(parameters, " ") + "\"")
 	cmd := getCmd(command, parameters)
-	out, err := cmd.Output()
-	fmt.Println(string(out))
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Start()
+	cmd.Wait()
 	return err
 }
 
@@ -78,6 +111,27 @@ func shift(s []string) []string {
 
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&AddAction, "add", "a", false, "Add a new task with the template")
+
+	viper.SetConfigName("taskhelper")
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath("$HOME/.config/taskhelper")
+
+	err := viper.ReadInConfig() // Find and read the config file
+	if err != nil {             // Handle errors reading the config file
+		panic(fmt.Errorf("Fatal error config file: %s", err))
+	}
+}
+
+// Configuration Initialization
+func initConfig() {
+	viper.SetConfigName(".taskhelper")
+	viper.AddConfigPath("$HOME/.config/.taskhelper")
+	viper.AutomaticEnv()
+
+	fmt.Println("Using config file:", viper.ConfigFileUsed())
+	if err := viper.ReadInConfig(); err == nil {
+		fmt.Println("Using config file:", viper.ConfigFileUsed())
+	}
 }
 
 // Execute the command
