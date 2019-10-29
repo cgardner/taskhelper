@@ -12,9 +12,6 @@ import (
 	"strings"
 )
 
-// AddAction Flag to determine whether the user is adding a task with this template
-var AddAction bool
-
 var rootCmd = &cobra.Command{
 	Use:   "taskhelper",
 	Short: "taskwarrior helper",
@@ -33,11 +30,12 @@ var rootCmd = &cobra.Command{
 }
 
 func runTemplate(template string, args []string) {
+	// fmt.Println("using template `" + template + "` with `" + strings.Join(args, ", ") + "`")
 	if len(args) == 0 {
 		report(template)
+		return
 	}
 	add(template, args)
-
 }
 
 func report(template string) {
@@ -48,6 +46,7 @@ func report(template string) {
 		reportName = viper.GetString(configName)
 	}
 
+	fmt.Println("Displaying the \"" + reportName + "\" report")
 	parameters := []string{reportName}
 	execute("task", parameters)
 }
@@ -110,8 +109,6 @@ func shift(s []string) []string {
 }
 
 func init() {
-	rootCmd.PersistentFlags().BoolVarP(&AddAction, "add", "a", false, "Add a new task with the template")
-
 	viper.SetConfigName("taskhelper")
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath("$HOME/.config/taskhelper")

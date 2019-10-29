@@ -1,7 +1,9 @@
 package main
 
-import ( "./cmd" )
+import (
+	"github.com/cgardner/taskhelper/cmd"
+)
 
-func main () {
-  cmd.Execute();
+func main() {
+	cmd.Execute()
 }
