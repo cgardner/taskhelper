@@ -30,7 +30,6 @@ var rootCmd = &cobra.Command{
 }
 
 func runTemplate(template string, args []string) {
-	// fmt.Println("using template `" + template + "` with `" + strings.Join(args, ", ") + "`")
 	if len(args) == 0 {
 		report(template)
 		return
@@ -39,15 +38,13 @@ func runTemplate(template string, args []string) {
 }
 
 func report(template string) {
-	var reportName = template
 	configName := template + ".report"
+	parameters := []string{template}
 	if viper.IsSet(configName) {
 		fmt.Println("Using the template as the report")
-		reportName = viper.GetString(configName)
+		parameters = viper.GetStringSlice(configName)
 	}
 
-	fmt.Println("Displaying the \"" + reportName + "\" report")
-	parameters := []string{reportName}
 	execute("task", parameters)
 }
 
@@ -62,10 +59,11 @@ func add(template string, task []string) {
 		fmt.Println(err.Error())
 		os.Exit(0)
 	}
-	fmt.Println("Using the template as the report")
-	var addTemplate = viper.GetString(configName)
 
-	parameters := append([]string{"add", addTemplate}, task...)
+	addTemplate := viper.GetStringSlice(configName)
+
+	parameters := append([]string{"add"}, addTemplate...)
+	parameters = append(parameters, task...)
 
 	fmt.Println("Adding a task using \"" + template + "\"")
 	err := execute("task", parameters)
