@@ -18,8 +18,8 @@ func NewCommand(template string, props types.Template) *cobra.Command {
 		Short: fmt.Sprintf("Use the \"%s\" template", template),
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
-				execute("task", props.Report)
-				os.Exit(0)
+				displayReport(props.Report)
+				return
 			}
 
 			task := props.Add
@@ -49,4 +49,31 @@ func saveTask(newTask types.TaskTemplate) error {
 	}
 
 	return nil
+}
+
+func displayReport(report types.Report) {
+	params := []string{}
+
+	if report.Filters.Project != "" {
+		params = append(params, fmt.Sprintf("project:\"%s\"", report.Filters.Project))
+	}
+
+	if len(report.Filters.Tags) != 0 {
+		for _, tag := range report.Filters.Tags {
+			params = append(params, fmt.Sprintf("+%s", tag))
+		}
+	}
+
+	if report.Report != "" {
+		params = append(params, report.Report)
+	}
+
+	cmd := exec.Command("task", params...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Start()
+	cmd.Wait()
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 }

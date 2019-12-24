@@ -2,6 +2,6 @@ package types
 
 type Template struct {
 	Add      TaskTemplate `mapstructure:"add"`
-	Report   []string     `mapstructure:"report"`
+	Report   Report       `mapstructure:"report"`
 	Priority string       `mapstructure:"priority"`
 }
