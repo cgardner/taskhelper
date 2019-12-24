@@ -1,5 +1,14 @@
-templates:
-  in:
-    add: +in
-    report: in
-
+templates: 
+  test:
+    add:
+      project: Test
+      tags:
+        - work
+        - someday
+      priority: L
+    report:
+      filters:
+        project: Test
+        tags:
+          - test
+      report: test
