@@ -7,4 +7,8 @@ templates:
         - someday
       priority: L
     report:
-      - proj:"Test"
+      filters:
+        project: Test
+        tags:
+          - test
+      report: test
