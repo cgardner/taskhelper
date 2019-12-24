@@ -10,41 +10,52 @@ import (
 	"github.com/spf13/viper"
 )
 
-var rootCmd = &cobra.Command{
-	Use:   "taskhelper",
-	Short: "taskwarrior helper",
-	Long:  "This is a helper function for taskwarrior that allows you to set up task templates and generate reports",
-	Args:  cobra.MinimumNArgs(1),
-}
+var (
+	configFile string
+
+	rootCmd = &cobra.Command{
+		Version: "0.1.0",
+		Use:     "taskhelper",
+		Short:   "taskwarrior helper",
+		Long:    "This is a helper function for taskwarrior that allows you to set up task templates and generate reports",
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) == 0 {
+				cmd.Help()
+				return
+			}
+
+			subCmd, _, _ := cmd.Traverse(args)
+			subCmd.Execute()
+		},
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			var settings map[string]types.Template
+			viper.Unmarshal(&settings)
+
+			for name, props := range settings {
+				command := NewCommand(name, props)
+				cmd.AddCommand(command)
+			}
+		},
+	}
+)
 
 func init() {
-	viper.SetConfigName("taskhelper")
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath("$HOME/.config/taskhelper")
-
-	err := viper.ReadInConfig() // Find and read the config file
-	if err != nil {             // Handle errors reading the config file
-		panic(fmt.Errorf("Fatal error config file: %s", err))
-	}
-
-	var settings map[string]types.Template
-	viper.Unmarshal(&settings)
-
-	for name, props := range settings {
-		command := NewCommand(name, props)
-		rootCmd.AddCommand(command)
-	}
+	cobra.OnInitialize(initConfig)
+	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "", "config file (default is $HOME/.config/taskhelper.yaml)")
 }
 
 // Configuration Initialization
 func initConfig() {
-	viper.SetConfigName(".taskhelper")
-	viper.AddConfigPath("$HOME/.config/.taskhelper")
+	if configFile != "" {
+		viper.SetConfigFile(configFile)
+	} else {
+		viper.SetConfigName("taskhelper")
+		viper.SetConfigType("yaml")
+		viper.AddConfigPath("$HOME/.config/taskhelper")
+	}
 	viper.AutomaticEnv()
 
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
-	}
+	viper.ReadInConfig()
 }
 
 // Execute the command
