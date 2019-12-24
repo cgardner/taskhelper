@@ -34,4 +34,4 @@ build:
 	@echo "Done building"
 
 run: build
-	bin/${APP}
+	bin/${APP} --config ./taskhelper2.yaml
