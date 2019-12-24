@@ -1,5 +1,10 @@
-templates:
-  in:
-    add: +in
-    report: in
-
+templates: 
+  test:
+    add:
+      project: Test
+      tags:
+        - work
+        - someday
+      priority: L
+    report:
+      - proj:"Test"
