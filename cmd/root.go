@@ -28,10 +28,10 @@ var (
 			subCmd.Execute()
 		},
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			var settings map[string]types.Template
+			var settings types.TaskHelperConfig
 			viper.Unmarshal(&settings)
 
-			for name, props := range settings {
+			for name, props := range settings.Templates {
 				command := NewCommand(name, props)
 				cmd.AddCommand(command)
 			}

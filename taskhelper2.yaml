@@ -1,3 +1,5 @@
-in:
-  add: +in
-  report: in
+templates:
+  in:
+    add: +in
+    report: in
+
