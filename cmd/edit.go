@@ -17,7 +17,10 @@ var editCmd = &cobra.Command{
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Get UUID for the task
-		taskId := args[0]
+		task, err := lib.GetNote(args[0])
+		if err != nil {
+			log.Fatal(err)
+		}
 
 		noteRoot, err := lib.GetNotePath()
 		if err != nil {
@@ -25,7 +28,7 @@ var editCmd = &cobra.Command{
 		}
 
 		// Create the File
-		fileName := fmt.Sprintf("%s/notes-%s.md", noteRoot, taskId)
+		fileName := fmt.Sprintf("%s/%s.md", noteRoot, task.Uuid())
 
 		// Create the file
 		f, err := os.OpenFile(fileName, os.O_RDWR|os.O_CREATE, 0755)
