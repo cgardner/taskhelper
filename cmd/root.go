@@ -54,6 +54,11 @@ func initConfig() {
 		viper.AddConfigPath("$HOME/.config/taskhelper")
 	}
 	viper.AutomaticEnv()
+	viper.SetDefault("config", map[string]interface{}{
+		"notes": map[string]interface{}{
+			"path": "$HOME/.task/notes/",
+		},
+	})
 
 	viper.ReadInConfig()
 }
